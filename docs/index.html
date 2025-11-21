@@ -1,1 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Everyday is Friday</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 { 
+            font-size: 4em; 
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff6b6b, #ffe66d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { font-size: 1.6em; opacity: 0.9; margin-bottom: 20px; }
+        
+        .controls {
+            margin: 30px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        select, button {
+            padding: 12px 25px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            border: none;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        select {
+            background: white;
+            color: #333;
+            min-width: 300px;
+        }
+        button {
+            background: #ff4757;
+            color: white;
+        }
+        button:hover { background: #ff3742; transform: translateY(-3px); }
 
+        .latest-badge {
+            background: #ffe66d;
+            color: #000;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.1em;
+            display: inline-block;
+            margin: 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .latest-date {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .draws-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            margin: 40px 0;
+            width: 100%;
+        }
+        .draw {
+            background: rgba(255,255,255,0.12);
+            padding: 25px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            min-width: 320px;
+            flex: 1;
+            max-width: 400px;
+        }
+        .draw-name {
+            font9-size: 1.7em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .numbers {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .ball {
+            width: 70px;
+            height: 70px;
+            background: white;
+            color: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            animation: bounceIn 0.8s ease-out;
+        }
+        .bonus { background: gold !important; color: #000; }
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.2 Anchorage); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .error { color: #ff6b6b; font-size: 1.3em; margin-top: 20px; }
+        footer { margin-top: 60px; font-size: 0.9em; opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <h1>Everyday is Friday</h1>
+    <p class="subtitle">Your daily dose of weekend vibes & lucky numbers 🍀✨</p>
+
+    <div id="latestBadge" class="latest-badge">TODAY'S LUCKY DRAWS</div>
+    <div class="latest-date" id="latestDate"></div>
+
+    <div class="controls">
+        <select id="dateSelector">
+            <option value="">Loading past Fridays...</option>
+        </select>
+        <button onclick="loadRandomSet()">Feeling Nostalgic? Random Past Friday</button>
+    </div>
+
+    <div id="drawsContainer" class="draws-container"></div>
+
+    <p class="error" id="error"></p>
+
+    <footer>Everyday is Friday • Powered by numbers.json • Today is November 21, 2025</footer>
+
+    <script>
+        let allSets = [];
+        let datesMap = {}; // date → array of sets
+
+        function displaySets(sets, selectedDate = null) {
+            const container = document.getElementById('drawsContainer');
+            const badge = document.getElementById('latestBadge');
+            const dateEl = document.getElementById('latestDate');
+            container.innerHTML = '';
+
+            const isLatest = selectedDate === null;
+            badge.textContent = sets.length === 1 
+                ? (isLatest ? "TODAY'S LUCKY DRAW" : "DRAW FROM SELECTED DATE")
+                : (isLatest ? "TODAY'S LUCKY DRAWS" : "DRAWS FROM SELECTED DATE");
+
+            if (sets.length > 0) {
+                const dateObj = new Date(isLatest ? sets[0].date : selectedDate);
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = dateObj.toLocaleDateString(undefined, options);
+            }
+
+            sets.forEach(set => {
+                const drawDiv = document.createElement('div');
+                drawDiv.className = 'draw';
+
+                const name = document.createElement('div');
+                name.className = 'draw-name';
+                name.textContent = set.name || 'Friday Magic';
+                drawDiv.appendChild(name);
+
+                const numbersDiv = document.createElement('div');
+                numbersDiv.className = 'numbers';
+
+                set.main.forEach(num => {
+                    const ball = document.createElement('div');
+                    ball.className = 'ball';
+                    ball.textContent = num.toString().padStart(2, '0');
+                    numbersDiv.appendChild(ball);
+                });
+
+                if (set.bonus) {
+                    set.bonus.forEach(b => {
+                        const ball = document.createElement('div');
+                        ball.className = 'ball bonus';
+                        ball.textContent = b.toString().padStart(2, '0');
+                        numbersDiv.appendChild(ball);
+                    });
+                }
+
+                drawDiv.appendChild(numbersDiv);
+                container.appendChild(drawDiv);
+            });
+        }
+
+        async function loadData() {
+            const errorEl = document.getElementById('error');
+            const selector = document.getElementById('dateSelector');
+            errorEl.textContent = '';
+
+            try {
+                const response = await fetch('numbers.json');
+                if (!response.ok) throw new Error('Could not load numbers.json');
+                
+                allSets = await response.json();
+                if (!allSets.length) throw new Error('No draws found');
+
+                // Build dates map and populate selector
+                datesMap = {};
+                const dateSet = new Set();
+
+                allSets.forEach(set => {
+                    if (set.date && !isNaN(new Date(set.date).getTime())) {
+                        if (!datesMap[set.date]) datesMap[set.date] = [];
+                        datesMap[set.date].push(set);
+                        dateSet.add(set.date);
+                    }
+                });
+
+                const sortedDates = Array.from(dateSet).sort((a, b) => new Date(b) - new Date(a));
+
+                selector.innerHTML = '<option value="">← Choose a past Friday</option>';
+                sortedDates.forEach(date => {
+                    const opt = document.createElement('option');
+                    opt.value = date;
+                    const d = new Date(date);
+                    opt.textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    selector.appendChild(opt);
+                });
+
+                // Show latest by default
+                const latestDate = sortedDates[0];
+                const latestSets = datesMap[latestDate] || [];
+                displaySets(latestSets);
+
+            } catch (err) {
+                errorEl.textContent = '⚠️ ' + err.message;
+            }
+        }
+
+        // Date selector handler
+        document.getElementById('dateSelector').addEventListener('change', function() {
+            const selected = this.value;
+            if (selected && datesMap[selected]) {
+                displaySets(datesMap[selected], selected);
+            }
+        });
+
+        // Random past draw
+        function loadRandomSet() {
+            if (allSets.length === 0) {
+                document.getElementById('error').textContent = '⚠️ Loading… please wait!';
+                return;
+            }
+            const randomSet = allSets[Math.floor(Math.random() * allSets.length)];
+            displaySets([randomSet], randomSet.date);
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
