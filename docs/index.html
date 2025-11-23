@@ -14,12 +14,12 @@
         button{background:#ff4757;color:#fff}
         button:hover{background:#ff3742;transform:translateY(-3px)}
         .latest-badge{background:#ffe66d;color:#000;padding:10px 25px;border-radius:30px;font-weight:bold;font-size:1.1em;margin:10px 0;box-shadow:0 4px 15px rgba(0,0,0,.3)}
-        .latest-date{font-size:1.8em;font-weight:bold;margin:15px 0}
         .draws-container{display:flex;flex-wrap:wrap;gap:40px;justify-content:center;margin:40px 0;width:100%}
-        .draw{background:rgba(255,255,255,.12);padding:25px;border-radius:20px;backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.3);min-width:320px;flex:1;max-width:420px}
-        .draw-name{font-size:1.9em;margin-bottom:15px;font-weight:bold}
+        .draw{background:rgba(255,255,255,.15);padding:30px;border-radius:24px;backdrop-filter:blur(12px);box-shadow:0 12px 32px rgba(0,0,0,.4);min-width:340px;flex:1;max-width:460px}
+        .draw-name{font-size:2em;margin-bottom:8px;font-weight:bold}
+        .draw-date{font-size:1.2em;opacity:0.9;margin-bottom:20px;font-style:italic}
         .numbers{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
-        .ball{width:72px;height:72px;background:#fff;color:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6em;font-weight:bold;box-shadow:0 8px 20px rgba(0,0,0,.4);animation:bounceIn .8s ease-out;overflow:hidden}
+        .ball{width:76px;height:76px;background:#fff;color:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8em;font-weight:bold;box-shadow:0 8px 20px rgba(0,0,0,.5);animation:bounceIn .8s ease-out;overflow:hidden}
         .bonus{background:gold!important;color:#000}
         @keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
         .error{color:#ff6b6b;font-size:1.3em;margin-top:20px}
@@ -28,10 +28,9 @@
 </head>
 <body>
     <h1>Everyday is Friday</h1>
-    <p class="subtitle">Your daily dose of weekend vibes — loaded live from the web! 🍀✨</p>
+    <p class="subtitle">Your daily dose of weekend vibes — live from the web! Date shown on every card</p>
 
     <div id="latestBadge" class="latest-badge">TODAY'S MAGIC</div>
-    <div class="latest-date" id="latestDate"></div>
 
     <div class="controls">
         <select id="dateSelector"><option>Loading your magic moments...</option></select>
@@ -41,25 +40,21 @@
     <div id="drawsContainer" class="draws-container"></div>
     <p class="error" id="error"></p>
 
-    <footer>Everyday is Friday • Data loaded from the web • November 21, 2025</footer>
+    <footer>Everyday is Friday • Live from the web • November 21, 2025</footer>
 
     <script>
-        // CHANGE THIS URL TO YOUR OWN JSON FILE ON THE WEB
+        // CHANGE THIS TO YOUR OWN PUBLIC JSON URL
         const JSON_URL = 'https://raw.githubusercontent.com/yblebon/datasources/main/friday.json';
-        // Example real one you can test right now:
-        // const JSON_URL = 'https://gist.githubusercontent.com/anonymous/0123456789abcdef/raw/numbers.json';
 
         let allSets = [];
         let datesMap = {};
 
         function processSet(entry) {
             if (typeof entry !== 'object' || !entry.date) return null;
-
             const main = Array.isArray(entry.main) ? entry.main.map(String) : [];
             const bonus = entry.bonus !== undefined 
                 ? (Array.isArray(entry.bonus) ? entry.bonus.map(String) : [String(entry.bonus)])
                 : [];
-
             if (main.length === 0) return null;
 
             return {
@@ -73,7 +68,6 @@
         function displaySets(sets, selectedDate = null) {
             const container = document.getElementById('drawsContainer');
             const badge = document.getElementById('latestBadge');
-            const dateEl = document.getElementById('latestDate');
             container.innerHTML = '';
 
             const isLatest = selectedDate === null;
@@ -81,15 +75,11 @@
                 ? (isLatest ? "TODAY'S MAGIC" : "MAGIC FROM THIS DATE")
                 : (isLatest ? "TODAY'S MAGIC MOMENTS" : "MAGIC FROM THIS DATE");
 
-            if (sets.length > 0) {
-                const dateObj = new Date(isLatest ? sets[0].date : selectedDate);
-                dateEl.textContent = dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            }
-
             sets.forEach(set => {
                 const drawDiv = document.createElement('div');
                 drawDiv.className = 'draw';
 
+                // Draw name (optional)
                 if (set.name) {
                     const nameEl = document.createElement('div');
                     nameEl.className = 'draw-name';
@@ -97,6 +87,19 @@
                     drawDiv.appendChild(nameEl);
                 }
 
+                // DATE SHOWN HERE ON THE CARD
+                const dateEl = document.createElement('div');
+                dateEl.className = 'draw-date';
+                const dateObj = new Date(set.date);
+                dateEl.textContent = dateObj.toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                drawDiv.appendChild(dateEl);
+
+                // Numbers
                 const numbersDiv = document.createElement('div');
                 numbersDiv.className = 'numbers';
 
@@ -122,12 +125,11 @@
         async function loadData() {
             const errorEl = document.getElementById('error');
             const selector = document.getElementById('dateSelector');
-            errorEl.textContent = 'Loading your magic from the web...';
+            errorEl.textContent = 'Loading magic from the web...';
 
             try {
-                const response = await fetch(JSON_URL, { cache: "no-store" }); // always fresh
+                const response = await fetch(JSON_URL + '?t=' + Date.now());
                 if (!response.ok) throw new Error(`Failed to load (${response.status})`);
-
                 const rawData = await response.json();
 
                 datesMap = {};
@@ -159,12 +161,11 @@
                     displaySets(datesMap[sortedDates[0]]);
                     errorEl.textContent = '';
                 } else {
-                    errorEl.textContent = 'No magic found in the JSON file.';
+                    errorEl.textContent = 'No draws found.';
                 }
 
             } catch (err) {
-                errorEl.textContent = '⚠️ ' + err.message + ' — Check the URL!';
-                console.error(err);
+                errorEl.textContent = 'Error: ' + err.message + ' — Check your JSON_URL!';
             }
         }
 
@@ -181,7 +182,6 @@
             displaySets([random], random.date);
         }
 
-        // Auto-load from the web when page opens
         window.onload = loadData;
     </script>
 </body>
