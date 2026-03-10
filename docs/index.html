@@ -1,188 +1,691 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Everyday is Friday</title>
-    <style>
-        body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-align:center;padding:50px 20px;margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-        h1{font-size:4em;margin-bottom:10px;background:linear-gradient(90deg,#ff6b6b,#ffe66d);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .subtitle{font-size:1.6em;opacity:.9;margin-bottom:20px}
-        .controls{margin:30px 0;display:flex;flex-direction:column;align-items:center;gap:15px}
-        select,button{padding:12px 25px;font-size:1.3em;border-radius:50px;border:none;box-shadow:0 6px 15px rgba(0,0,0,.3);cursor:pointer}
-        select{background:#fff;color:#333;min-width:320px}
-        button{background:#ff4757;color:#fff}
-        button:hover{background:#ff3742;transform:translateY(-3px)}
-        .latest-badge{background:#ffe66d;color:#000;padding:10px 25px;border-radius:30px;font-weight:bold;font-size:1.1em;margin:10px 0;box-shadow:0 4px 15px rgba(0,0,0,.3)}
-        .draws-container{display:flex;flex-wrap:wrap;gap:40px;justify-content:center;margin:40px 0;width:100%}
-        .draw{background:rgba(255,255,255,.15);padding:30px;border-radius:24px;backdrop-filter:blur(12px);box-shadow:0 12px 32px rgba(0,0,0,.4);min-width:340px;flex:1;max-width:460px}
-        .draw-name{font-size:2em;margin-bottom:8px;font-weight:bold}
-        .draw-date{font-size:1.2em;opacity:0.9;margin-bottom:20px;font-style:italic}
-        .numbers{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
-        .ball{width:76px;height:76px;background:#fff;color:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8em;font-weight:bold;box-shadow:0 8px 20px rgba(0,0,0,.5);animation:bounceIn .8s ease-out;overflow:hidden}
-        .bonus{background:gold!important;color:#000}
-        @keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
-        .error{color:#ff6b6b;font-size:1.3em;margin-top:20px}
-        footer{margin-top:60px;font-size:.9em;opacity:.8}
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Everyday is Friday</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & tokens ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0b0c14;
+      --surface:   #13141f;
+      --surface2:  #1c1d2e;
+      --border:    rgba(255,255,255,.07);
+      --accent:    #f7c948;
+      --accent2:   #ff5e5b;
+      --accent3:   #5ef7c2;
+      --text:      #e8e9f4;
+      --muted:     rgba(232,233,244,.45);
+      --radius:    20px;
+      --shadow:    0 20px 60px rgba(0,0,0,.6);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 24px 80px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ── Background atmosphere ──────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(247,201,72,.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 110%, rgba(255,94,91,.06) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(94,247,194,.04) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Noise grain overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: .025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout wrapper ─────────────────────────────────── */
+    .page { position: relative; z-index: 1; width: 100%; max-width: 1100px; }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header { text-align: center; margin-bottom: 48px; animation: fadeUp .7s ease both; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .75rem;
+      font-weight: 500;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(247,201,72,.1);
+      border: 1px solid rgba(247,201,72,.2);
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+    .eyebrow::before { content: '✦'; font-size: .6rem; }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 10vw, 7.5rem);
+      line-height: .95;
+      letter-spacing: .02em;
+      background: linear-gradient(135deg, var(--accent) 0%, #ffedaa 40%, var(--accent2) 75%, #ff8b89 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--muted);
+      max-width: 460px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Badge ──────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, rgba(247,201,72,.15), rgba(247,201,72,.05));
+      border: 1px solid rgba(247,201,72,.3);
+      color: var(--accent);
+      padding: 10px 24px;
+      border-radius: 100px;
+      font-size: .85rem;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+      animation: fadeUp .7s .1s ease both;
+      transition: opacity .3s;
+    }
+    .badge .dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    /* ── Controls ───────────────────────────────────────── */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 48px;
+      animation: fadeUp .7s .2s ease both;
+    }
+
+    .select-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .select-wrapper::after {
+      content: '▾';
+      position: absolute;
+      right: 18px;
+      color: var(--muted);
+      pointer-events: none;
+      font-size: .9rem;
+    }
+
+    select {
+      appearance: none;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 13px 44px 13px 22px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      min-width: 280px;
+      cursor: pointer;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+    select:focus {
+      border-color: rgba(247,201,72,.4);
+      box-shadow: 0 0 0 3px rgba(247,201,72,.1);
+    }
+    select option { background: #1c1d2e; }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent2);
+      color: #fff;
+      border: none;
+      border-radius: 100px;
+      padding: 13px 28px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(255,94,91,.3);
+      outline: none;
+    }
+    button:hover  { background: #ff4441; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,94,91,.4); }
+    button:active { transform: translateY(0); }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(255,94,91,.4); }
+    button svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── Draw cards grid ────────────────────────────────── */
+    .draws-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      width: 100%;
+    }
+
+    /* ── Single draw card ───────────────────────────────── */
+    .draw {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      animation: cardIn .6s ease both;
+    }
+
+    /* Card top accent strip */
+    .draw::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    /* Subtle card inner glow */
+    .draw::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(247,201,72,.04), transparent 70%);
+      pointer-events: none;
+    }
+
+    .draw-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: .04em;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .draw-date {
+      font-size: .82rem;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    /* ── Ball grid ──────────────────────────────────────── */
+    .numbers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: flex-start;
+    }
+
+    .ball {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 500;
+      position: relative;
+      animation: ballIn .5s ease both;
+      overflow: hidden;
+      flex-shrink: 0;
+      /* Hard clamp — never let text escape the circle */
+      white-space: nowrap;
+      text-overflow: clip;
+      line-height: 1;
+    }
+
+    /* Shrink font progressively for longer values */
+    .ball[data-len="2"] { font-size: 1.25rem; }
+    .ball[data-len="3"] { font-size: 1rem; }
+    .ball[data-len="4"] { font-size: .78rem; letter-spacing: -.02em; }
+
+    /* Stagger each ball */
+    .ball:nth-child(1)  { animation-delay: .05s; }
+    .ball:nth-child(2)  { animation-delay: .10s; }
+    .ball:nth-child(3)  { animation-delay: .15s; }
+    .ball:nth-child(4)  { animation-delay: .20s; }
+    .ball:nth-child(5)  { animation-delay: .25s; }
+    .ball:nth-child(6)  { animation-delay: .30s; }
+    .ball:nth-child(7)  { animation-delay: .35s; }
+    .ball:nth-child(8)  { animation-delay: .40s; }
+    .ball:nth-child(9)  { animation-delay: .45s; }
+    .ball:nth-child(10) { animation-delay: .50s; }
+
+    .ball-main {
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--text);
+      box-shadow: 0 4px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .ball-bonus {
+      background: linear-gradient(135deg, #f7c948, #ffedaa);
+      color: #1a1200;
+      box-shadow: 0 4px 18px rgba(247,201,72,.4), inset 0 1px 0 rgba(255,255,255,.4);
+    }
+
+    .ball-label {
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: .55rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .numbers-group {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .numbers-row { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    .numbers-section-label {
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .15em;
+      color: var(--muted);
+      margin-bottom: -8px;
+    }
+
+    /* ── Loading state ──────────────────────────────────── */
+    .loading-overlay {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: .9rem;
+      padding: 60px 0;
+      width: 100%;
+    }
+    .loading-overlay.active { display: flex; }
+
+    .spinner {
+      width: 22px; height: 22px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    /* ── Error ──────────────────────────────────────────── */
+    .error-msg {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent2);
+      background: rgba(255,94,91,.08);
+      border: 1px solid rgba(255,94,91,.2);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: .9rem;
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .error-msg.active { display: flex; }
+    .error-msg::before { content: '⚠'; font-size: 1rem; }
+
+    /* ── Footer ─────────────────────────────────────────── */
+    footer {
+      margin-top: 72px;
+      font-size: .75rem;
+      font-weight: 300;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: .05em;
+    }
+    footer span { color: var(--accent); }
+
+    /* ── Animations ─────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px) scale(.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes ballIn {
+      from { opacity: 0; transform: scale(.5) rotate(-20deg); }
+      to   { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .5; transform: scale(.75); }
+    }
+
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 600px) {
+      body { padding: 40px 16px 60px; }
+      .controls { flex-direction: column; align-items: stretch; }
+      select { min-width: unset; width: 100%; }
+      button { justify-content: center; }
+      .draw { padding: 24px 20px; }
+      .ball { width: 50px; height: 50px; font-size: 1.05rem; }
+    }
+  </style>
 </head>
 <body>
+
+<div class="page">
+  <!-- Header -->
+  <header>
+    <div class="eyebrow">Live from the web</div>
     <h1>Everyday is Friday</h1>
-    <p class="subtitle">Your daily dose of weekend vibes — live from the web! Date shown on every card</p>
+    <p class="subtitle">Your daily dose of weekend vibes — fresh draws, every single day.</p>
+  </header>
 
-    <div id="latestBadge" class="latest-badge">TODAY'S MAGIC</div>
+  <!-- Badge -->
+  <div class="badge" id="latestBadge" aria-live="polite">
+    <span class="dot" role="presentation"></span>
+    <span id="badgeText">Today's magic</span>
+  </div>
 
-    <div class="controls">
-        <select id="dateSelector"><option>Loading your magic moments...</option></select>
-        <button onclick="loadRandomSet()">Random Magic Moment</button>
+  <!-- Controls -->
+  <div class="controls" role="search" aria-label="Draw filters">
+    <div class="select-wrapper">
+      <label for="dateSelector" class="sr-only">Select a date</label>
+      <select id="dateSelector" aria-label="Select draw date">
+        <option>Loading magic moments…</option>
+      </select>
     </div>
 
-    <div id="drawsContainer" class="draws-container"></div>
-    <p class="error" id="error"></p>
+    <button id="randomBtn" aria-label="Show a random draw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+        <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+      </svg>
+      Random moment
+    </button>
+  </div>
 
-    <footer>Everyday is Friday • Live from the web • November 21, 2025</footer>
+  <!-- Loading -->
+  <div class="loading-overlay" id="loadingOverlay" role="status" aria-label="Loading draws">
+    <div class="spinner"></div>
+    <span>Fetching magic from the web…</span>
+  </div>
 
-    <script>
-        // CHANGE THIS TO YOUR OWN PUBLIC JSON URL
-        const JSON_URL = 'https://static-conf.vercel.app/go/football';
+  <!-- Error -->
+  <p class="error-msg" id="errorMsg" role="alert"></p>
 
-        let allSets = [];
-        let datesMap = {};
+  <!-- Cards -->
+  <div id="drawsContainer" class="draws-container" aria-live="polite" aria-atomic="true"></div>
 
-        function processSet(entry) {
-            if (typeof entry !== 'object' || !entry.date) return null;
-            const main = Array.isArray(entry.main) ? entry.main.map(String) : [];
-            const bonus = entry.bonus !== undefined 
-                ? (Array.isArray(entry.bonus) ? entry.bonus.map(String) : [String(entry.bonus)])
-                : [];
-            if (main.length === 0) return null;
+  <!-- Footer -->
+  <footer>
+    Everyday is Friday &nbsp;·&nbsp; Live from the web &nbsp;·&nbsp;
+    <span id="footerYear"></span>
+  </footer>
+</div>
 
-            return {
-                date: entry.date,
-                main,
-                bonus,
-                name: entry.name ? String(entry.name) : null
-            };
-        }
+<!-- Visually hidden util -->
+<style>.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
 
-        function displaySets(sets, selectedDate = null) {
-            const container = document.getElementById('drawsContainer');
-            const badge = document.getElementById('latestBadge');
-            container.innerHTML = '';
+<script>
+  /* ── Config ─────────────────────────────────────────── */
+  const JSON_URL = 'https://static-conf.vercel.app/go/football';
 
-            const isLatest = selectedDate === null;
-            badge.textContent = sets.length === 1
-                ? (isLatest ? "TODAY'S MAGIC" : "MAGIC FROM THIS DATE")
-                : (isLatest ? "TODAY'S MAGIC MOMENTS" : "MAGIC FROM THIS DATE");
+  /* ── State ──────────────────────────────────────────── */
+  let allSets  = [];
+  let datesMap = {};
 
-            sets.forEach(set => {
-                const drawDiv = document.createElement('div');
-                drawDiv.className = 'draw';
+  /* ── DOM refs ───────────────────────────────────────── */
+  const container    = document.getElementById('drawsContainer');
+  const selector     = document.getElementById('dateSelector');
+  const badgeText    = document.getElementById('badgeText');
+  const badge        = document.getElementById('latestBadge');
+  const loadingEl    = document.getElementById('loadingOverlay');
+  const errorEl      = document.getElementById('errorMsg');
+  const randomBtn    = document.getElementById('randomBtn');
 
-                // Draw name (optional)
-                if (set.name) {
-                    const nameEl = document.createElement('div');
-                    nameEl.className = 'draw-name';
-                    nameEl.textContent = set.name;
-                    drawDiv.appendChild(nameEl);
-                }
+  // Footer year
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
 
-                // DATE SHOWN HERE ON THE CARD
-                const dateEl = document.createElement('div');
-                dateEl.className = 'draw-date';
-                const dateObj = new Date(set.date);
-                dateEl.textContent = dateObj.toLocaleDateString(undefined, {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                drawDiv.appendChild(dateEl);
+  /* ── Helpers ────────────────────────────────────────── */
+  function setLoading(on) {
+    loadingEl.classList.toggle('active', on);
+    container.style.display = on ? 'none' : '';
+  }
 
-                // Numbers
-                const numbersDiv = document.createElement('div');
-                numbersDiv.className = 'numbers';
+  function setError(msg) {
+    errorEl.textContent  = msg;
+    errorEl.classList.toggle('active', !!msg);
+  }
 
-                set.main.forEach(item => {
-                    const ball = document.createElement('div');
-                    ball.className = 'ball';
-                    ball.textContent = item;
-                    numbersDiv.appendChild(ball);
-                });
+  function formatDate(dateStr) {
+    // Append T12:00:00 to avoid timezone-related off-by-one day
+    const d = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00');
+    return d.toLocaleDateString(undefined, {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
 
-                set.bonus.forEach(item => {
-                    const ball = document.createElement('div');
-                    ball.className = 'ball bonus';
-                    ball.textContent = item;
-                    numbersDiv.appendChild(ball);
-                });
+  function processEntry(entry) {
+    if (typeof entry !== 'object' || !entry?.date) return null;
+    const main  = Array.isArray(entry.main)  ? entry.main.map(String)  : [];
+    const bonus = entry.bonus !== undefined
+      ? (Array.isArray(entry.bonus) ? entry.bonus.map(String) : [String(entry.bonus)])
+      : [];
+    if (main.length === 0) return null;
+    return {
+      date: entry.date,
+      main,
+      bonus,
+      name: entry.name ? String(entry.name) : null
+    };
+  }
 
-                drawDiv.appendChild(numbersDiv);
-                container.appendChild(drawDiv);
-            });
-        }
+  /* ── Render ─────────────────────────────────────────── */
+  function displaySets(sets, isLatest = false) {
+    container.innerHTML = '';
+    setError('');
+    badge.style.display = '';
 
-        async function loadData() {
-            const errorEl = document.getElementById('error');
-            const selector = document.getElementById('dateSelector');
-            errorEl.textContent = 'Loading magic from the web...';
+    badgeText.textContent = sets.length === 1
+      ? (isLatest ? "Today's magic" : "Magic from this date")
+      : (isLatest ? "Today's magic moments" : "Magic from this date");
 
-            try {
-                const response = await fetch(JSON_URL + '?t=' + Date.now());
-                if (!response.ok) throw new Error(`Failed to load (${response.status})`);
-                const rawData = await response.json();
+    sets.forEach((set, cardIdx) => {
+      const card = document.createElement('article');
+      card.className = 'draw';
+      card.style.animationDelay = `${cardIdx * .08}s`;
+      card.setAttribute('aria-label', set.name || 'Draw card');
 
-                datesMap = {};
-                const dateSet = new Set();
-                allSets = [];
+      // Name
+      if (set.name) {
+        const nameEl = document.createElement('div');
+        nameEl.className = 'draw-name';
+        nameEl.textContent = set.name;
+        card.appendChild(nameEl);
+      }
 
-                rawData.forEach(entry => {
-                    const set = processSet(entry);
-                    if (set) {
-                        if (!datesMap[set.date]) datesMap[set.date] = [];
-                        datesMap[set.date].push(set);
-                        dateSet.add(set.date);
-                        allSets.push(set);
-                    }
-                });
+      // Date
+      const dateEl = document.createElement('time');
+      dateEl.className = 'draw-date';
+      dateEl.dateTime = set.date;
+      dateEl.textContent = formatDate(set.date);
+      card.appendChild(dateEl);
 
-                const sortedDates = Array.from(dateSet).sort((a, b) => new Date(b) - new Date(a));
+      // Numbers group
+      const group = document.createElement('div');
+      group.className = 'numbers-group';
 
-                selector.innerHTML = '<option value="">← Pick any magic moment</option>';
-                sortedDates.forEach(date => {
-                    const opt = document.createElement('option');
-                    opt.value = date;
-                    const d = new Date(date);
-                    opt.textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    selector.appendChild(opt);
-                });
+      if (set.main.length) {
+        const mainWrap = document.createElement('div');
+        const mainLabel = document.createElement('div');
+        mainLabel.className = 'numbers-section-label';
+        mainLabel.textContent = 'Numbers';
+        const mainRow = document.createElement('div');
+        mainRow.className = 'numbers-row';
 
-                if (sortedDates.length > 0) {
-                    displaySets(datesMap[sortedDates[0]]);
-                    errorEl.textContent = '';
-                } else {
-                    errorEl.textContent = 'No draws found.';
-                }
-
-            } catch (err) {
-                errorEl.textContent = 'Error: ' + err.message + ' — Check your JSON_URL!';
-            }
-        }
-
-        document.getElementById('dateSelector').addEventListener('change', function() {
-            const selected = this.value;
-            if (selected && datesMap[selected]) {
-                displaySets(datesMap[selected], selected);
-            }
+        set.main.forEach((val, i) => {
+          const ball = document.createElement('div');
+          ball.className = 'ball ball-main';
+          ball.style.animationDelay = `${i * .055}s`;
+          const display = val.length > 4 ? val.slice(0, 4) : val;
+          ball.textContent = display;
+          ball.dataset.len = String(display.length);
+          ball.setAttribute('aria-label', `Number ${val}`);
+          mainRow.appendChild(ball);
         });
 
-        function loadRandomSet() {
-            if (allSets.length === 0) return;
-            const random = allSets[Math.floor(Math.random() * allSets.length)];
-            displaySets([random], random.date);
-        }
+        mainWrap.appendChild(mainLabel);
+        mainWrap.appendChild(mainRow);
+        group.appendChild(mainWrap);
+      }
 
-        window.onload = loadData;
-    </script>
+      if (set.bonus.length) {
+        const bonusWrap = document.createElement('div');
+        const bonusLabel = document.createElement('div');
+        bonusLabel.className = 'numbers-section-label';
+        bonusLabel.textContent = 'Bonus';
+        const bonusRow = document.createElement('div');
+        bonusRow.className = 'numbers-row';
+
+        set.bonus.forEach((val, i) => {
+          const ball = document.createElement('div');
+          ball.className = 'ball ball-bonus';
+          ball.style.animationDelay = `${(set.main.length + i) * .055}s`;
+          const display = val.length > 4 ? val.slice(0, 4) : val;
+          ball.textContent = display;
+          ball.dataset.len = String(display.length);
+          ball.setAttribute('aria-label', `Bonus ${val}`);
+          bonusRow.appendChild(ball);
+        });
+
+        bonusWrap.appendChild(bonusLabel);
+        bonusWrap.appendChild(bonusRow);
+        group.appendChild(bonusWrap);
+      }
+
+      card.appendChild(group);
+      container.appendChild(card);
+    });
+  }
+
+  /* ── Fetch ──────────────────────────────────────────── */
+  async function loadData() {
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${JSON_URL}?t=${Date.now()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+
+      datesMap = {};
+      allSets  = [];
+      const dateSet = new Set();
+
+      raw.forEach(entry => {
+        const set = processEntry(entry);
+        if (!set) return;
+        if (!datesMap[set.date]) datesMap[set.date] = [];
+        datesMap[set.date].push(set);
+        dateSet.add(set.date);
+        allSets.push(set);
+      });
+
+      const sorted = [...dateSet].sort((a, b) => new Date(b) - new Date(a));
+
+      selector.innerHTML = '<option value="">— Pick a magic moment —</option>';
+      sorted.forEach(date => {
+        const opt = document.createElement('option');
+        opt.value = date;
+        opt.textContent = formatDate(date);
+        selector.appendChild(opt);
+      });
+
+      if (sorted.length > 0) {
+        displaySets(datesMap[sorted[0]], true);
+      } else {
+        setError('No draws found in the data source.');
+      }
+    } catch (err) {
+      setError(`Could not load draws — ${err.message}. Check JSON_URL in the script.`);
+      badge.style.display = 'none';
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* ── Events ─────────────────────────────────────────── */
+  selector.addEventListener('change', () => {
+    const date = selector.value;
+    if (date && datesMap[date]) displaySets(datesMap[date], false);
+  });
+
+  randomBtn.addEventListener('click', () => {
+    if (!allSets.length) return;
+    const pick = allSets[Math.floor(Math.random() * allSets.length)];
+    displaySets([pick], false);
+    // Sync the selector
+    selector.value = pick.date;
+  });
+
+  /* ── Init ───────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', loadData);
+</script>
 </body>
 </html>
