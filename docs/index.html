@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <script defer src="https://umami-livid-five.vercel.app/script.js" data-website-id="5d2b8bd6-9468-4d2f-a3b8-b60659375222"></script>
 
   <style>
     /* ── Reset & tokens ─────────────────────────────────── */
@@ -429,20 +430,17 @@
 <body>
 
 <div class="page">
-  <!-- Header -->
   <header>
     <div class="eyebrow">Live from the web</div>
     <h1>Everyday is Friday</h1>
     <p class="subtitle">Your daily dose of weekend vibes — fresh draws, every single day.</p>
   </header>
 
-  <!-- Badge -->
   <div class="badge" id="latestBadge" aria-live="polite">
     <span class="dot" role="presentation"></span>
     <span id="badgeText">Today's magic</span>
   </div>
 
-  <!-- Controls -->
   <div class="controls" role="search" aria-label="Draw filters">
     <div class="select-wrapper">
       <label for="dateSelector" class="sr-only">Select a date</label>
@@ -460,26 +458,21 @@
     </button>
   </div>
 
-  <!-- Loading -->
   <div class="loading-overlay" id="loadingOverlay" role="status" aria-label="Loading draws">
     <div class="spinner"></div>
     <span>Fetching magic from the web…</span>
   </div>
 
-  <!-- Error -->
   <p class="error-msg" id="errorMsg" role="alert"></p>
 
-  <!-- Cards -->
   <div id="drawsContainer" class="draws-container" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Footer -->
   <footer>
     Everyday is Friday &nbsp;·&nbsp; Live from the web &nbsp;·&nbsp;
     <span id="footerYear"></span>
   </footer>
 </div>
 
-<!-- Visually hidden util -->
 <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
 
 <script>
@@ -571,14 +564,17 @@
       const group = document.createElement('div');
       group.className = 'numbers-group';
 
-      if (set.main.length) {
-        const mainWrap = document.createElement('div');
-        const mainLabel = document.createElement('div');
-        mainLabel.className = 'numbers-section-label';
-        mainLabel.textContent = 'Numbers';
-        const mainRow = document.createElement('div');
-        mainRow.className = 'numbers-row';
+      // Check if there are any numbers to display
+      if (set.main.length || set.bonus.length) {
+        const numbersWrap = document.createElement('div');
+        const numbersLabel = document.createElement('div');
+        numbersLabel.className = 'numbers-section-label';
+        numbersLabel.textContent = 'Numbers';
+        
+        const numbersRow = document.createElement('div');
+        numbersRow.className = 'numbers-row';
 
+        // 1. Add Main Numbers
         set.main.forEach((val, i) => {
           const ball = document.createElement('div');
           ball.className = 'ball ball-main';
@@ -587,22 +583,10 @@
           ball.textContent = display;
           ball.dataset.len = String(display.length);
           ball.setAttribute('aria-label', `Number ${val}`);
-          mainRow.appendChild(ball);
+          numbersRow.appendChild(ball);
         });
 
-        mainWrap.appendChild(mainLabel);
-        mainWrap.appendChild(mainRow);
-        group.appendChild(mainWrap);
-      }
-
-      if (set.bonus.length) {
-        const bonusWrap = document.createElement('div');
-        const bonusLabel = document.createElement('div');
-        bonusLabel.className = 'numbers-section-label';
-        bonusLabel.textContent = 'Bonus';
-        const bonusRow = document.createElement('div');
-        bonusRow.className = 'numbers-row';
-
+        // 2. Add Bonus Numbers directly to the SAME row
         set.bonus.forEach((val, i) => {
           const ball = document.createElement('div');
           ball.className = 'ball ball-bonus';
@@ -611,12 +595,12 @@
           ball.textContent = display;
           ball.dataset.len = String(display.length);
           ball.setAttribute('aria-label', `Bonus ${val}`);
-          bonusRow.appendChild(ball);
+          numbersRow.appendChild(ball);
         });
 
-        bonusWrap.appendChild(bonusLabel);
-        bonusWrap.appendChild(bonusRow);
-        group.appendChild(bonusWrap);
+        numbersWrap.appendChild(numbersLabel);
+        numbersWrap.appendChild(numbersRow);
+        group.appendChild(numbersWrap);
       }
 
       card.appendChild(group);
